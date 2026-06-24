@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Code Reviewer Bot - Premium Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon">AI</div>
+      <div>
+        <h1 class="logo-text">Antigravity Reviewer</h1>
+      </div>
+    </div>
+    <div class="status-badge">
+      <div class="status-dot"></div>
+      <span id="bot-status-text">Active / Ready</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="tab-container">
+      <button class="tab-btn active" onclick="switchTab('simulator')">Review Simulator</button>
+      <button class="tab-btn" onclick="switchTab('github-trigger')">Run PR Review</button>
+      <button class="tab-btn" onclick="switchTab('history')">Review History</button>
+    </div>
+
+    <!-- STATS CARDS -->
+    <div class="dashboard-grid">
+      <div class="card glass-panel">
+        <div class="card-title">Total Reviews</div>
+        <div class="card-value" id="stat-total-reviews">0</div>
+      </div>
+      <div class="card glass-panel">
+        <div class="card-title">Total Suggestions</div>
+        <div class="card-value" id="stat-total-suggestions" style="background: linear-gradient(to right, #ffffff, var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0</div>
+      </div>
+      <div class="card glass-panel">
+        <div class="card-title">High-risk Alerts</div>
+        <div class="card-value" id="stat-high-alerts" style="background: linear-gradient(to right, #ffffff, var(--color-error)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0</div>
+      </div>
+    </div>
+
+    <!-- TAB 1: SIMULATOR WORKSPACE -->
+    <div id="tab-simulator" class="tab-content">
+      <div class="workspace with-sidebar">
+        <!-- Editor Input -->
+        <div class="editor-section">
+          <div class="section-header">
+            <h2>Paste Git Diff</h2>
+            <button class="btn" id="btn-run-simulation" onclick="runSimulation()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              Review Diff
+            </button>
+          </div>
+          <div class="textarea-container glass-panel">
+            <textarea id="diff-input" placeholder="Paste your git diff output here...&#10;&#10;Example:&#10;diff --git a/app.py b/app.py&#10;index 123..456 100644&#10;--- a/app.py&#10;+++ b/app.py&#10;@@ -1,5 +1,6 @@&#10; import os&#10;+import sqlite3&#10; &#10; def get_user(user_id):&#10;-    return db.query(user_id)&#10;+    # DANGEROUS: SQL injection vulnerability&#10;+    conn = sqlite3.connect('dev.db')&#10;+    cursor = conn.cursor()&#10;+    return cursor.execute(f'SELECT * FROM users WHERE id = {user_id}')"></textarea>
+          </div>
+        </div>
+
+        <!-- Review Outputs -->
+        <div class="results-section">
+          <h2>Code Review Insights</h2>
+          
+          <div class="loader-container" id="simulator-loader">
+            <div class="spinner"></div>
+            <p>Gemini is auditing changes...</p>
+          </div>
+
+          <div id="simulation-output" class="glass-panel summary-container hidden">
+            <!-- Populated via Javascript -->
+          </div>
+
+          <div id="comments-output-container">
+            <!-- Inline suggestions cards will render here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: GITHUB TRIGGER FORM -->
+    <div id="tab-github-trigger" class="tab-content hidden">
+      <div class="glass-panel" style="max-width: 600px; margin: 0 auto; padding: 30px;">
+        <h2 style="margin-bottom: 20px;">Trigger Review for GitHub Pull Request</h2>
+        
+        <div class="form-group">
+          <label for="gh-repo">Repository (owner/repo)</label>
+          <input type="text" id="gh-repo" placeholder="e.g. google/jax" required>
+        </div>
+
+        <div class="form-group">
+          <label for="gh-pr">Pull Request Number</label>
+          <input type="text" id="gh-pr" placeholder="e.g. 124" required>
+        </div>
+
+        <div class="form-group">
+          <label for="gh-token">GitHub Token (optional, overrides server token)</label>
+          <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+        </div>
+
+        <button class="btn" style="width: 100%; margin-top: 10px;" id="btn-run-pr" onclick="runPRReview()">
+          Run PR Review
+        </button>
+
+        <div class="loader-container" id="pr-loader" style="margin-top: 20px;">
+          <div class="spinner"></div>
+          <p id="pr-loader-text">Sending request to review PR...</p>
+        </div>
+
+        <div id="pr-result-msg" class="hidden" style="margin-top: 20px; padding: 15px; border-radius: 8px; font-weight: 500;">
+          <!-- Success/Error alert message -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: HISTORY LIST -->
+    <div id="tab-history" class="tab-content hidden">
+      <h2>Recent Audit Logs</h2>
+      <div class="loader-container" id="history-loader">
+        <div class="spinner"></div>
+        <p>Loading history...</p>
+      </div>
+      <div class="history-list" id="history-list-container" style="margin-top: 20px;">
+        <!-- Filled by AppJS -->
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
