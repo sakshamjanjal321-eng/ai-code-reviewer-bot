@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 from github_handler import GitHubHandler, get_pr_diff, post_review_comment
 from reviewer import Reviewer, ReviewResult, review_code
 from rate_limiter import rate_limit_dependency
+from history_store import history_store
 
 # Configure logs
 logging.basicConfig(level=logging.INFO)
@@ -50,28 +51,12 @@ class PRReviewRequest(BaseModel):
 class DiffReviewRequest(BaseModel):
     diff_text: str
 
-# Helper functions for history storage
+# Helper functions for history storage delegating to unified datastore abstraction
 def load_history() -> List[dict]:
-    if not os.path.exists(HISTORY_FILE):
-        return []
-    try:
-        with open(HISTORY_FILE, "r") as f:
-            return json.load(f)
-    except Exception as e:
-        logger.error(f"Failed to load history: {e}")
-        return []
+    return history_store.load_history()
 
 def save_history(entry: dict):
-    history = load_history()
-    # Add new entry at the beginning
-    history.insert(0, entry)
-    # Keep last 50 entries
-    history = history[:50]
-    try:
-        with open(HISTORY_FILE, "w") as f:
-            json.dump(history, f, indent=2)
-    except Exception as e:
-        logger.error(f"Failed to write history: {e}")
+    history_store.save_history(entry)
 
 async def run_and_post_pr_review(req: PRReviewRequest):
     """

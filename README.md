@@ -81,7 +81,12 @@ sequenceDiagram
 3. **AI Code Audit**: A structured query (system prompt + git diff context + list of valid target lines) is compiled and dispatched to Google Gemini using the new `google-genai` SDK.
 4. **Validation & Filtering**: The structured JSON response from Gemini is auto-validated into a Pydantic `ReviewResult` schema. The backend runs a validation pass to discard any AI suggestion that tries to comment on unmodified lines (which would cause GitHub comment creation to fail).
 5. **Commenting**: Inline reviews are posted on GitHub at the precise line coordinates, and a high-level markdown summary is left on the PR.
-6. **Dashboard History**: The review status, timestamps, and severity counts are stored locally in `reviews_history.json` and rendered in the dashboard.
+6. **Dashboard History**: The review status, timestamps, and severity counts are stored locally in `reviews_history.json` (or an SQLite database if `SQLITE_DB_PATH` is configured) and rendered in the dashboard.
+
+### Production Scaling (Task Queue & Database Worker)
+To scale this application for large enterprise or highly active open-source repositories:
+- **Async Task Broker**: Under high concurrent traffic, FastAPI's local `BackgroundTasks` can be migrated to a dedicated worker pool using **ARQ** or **Celery** to ensure heavy LLM calls do not block the web server's main event loop.
+- **Relational Datastore**: The history store is abstracted to support SQLite by configuring `SQLITE_DB_PATH` in the environment. This handles database writes safely, preparing the app for containerized and serverless deployments (e.g. AWS Fargate, GCP Cloud Run) where local JSON file state would be ephemeral.
 
 ---
 
